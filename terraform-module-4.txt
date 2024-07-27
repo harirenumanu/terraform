@@ -1,0 +1,270 @@
+registry.terraform.io/providers/hashicorp/aws/latest/docs/resources
+
+https://developer.hashicorp.com/terraform/language/values/variables#arguments
+
+
+
+Attributes:
+------------
+
+Each resource has their associated attributes.
+
+Attributes are the fields in a resource that hold the value that end up in a state. 
+
+Whenever the resource is created these attributes and their values are part of state file.
+
+
+
+Argument Reference (In part of the terraform code we can write )
+
+Attribute Reference (These are the part of the state file )
+
+For Ex:
+------
+Create an instance through terraform. 
+
+After running the terraform apply --auto-approve
+
+we can check terraform.tfstate file 
+
+====================================================================================================================================
+
+Cross Resource Attribute Reference:
+-----------------------------------
+
+
+Typical Challenge:
+-----------------
+
+It can happen that happen in a single terraform file, you are defining two different resources.
+
+However, Resource2 might be depends on some value of Resource1
+
+Elastic IP --------------> Security Group
+
+Understanding the workflow:
+---------------------------
+
+Analyzing the Attributes of EIP:
+-------------------------------
+
+we have to find which attribute stores the public ip of associated with EIP resource.
+
+Terraform allows us to reference the attribute of one resource to be used in different resource.
+
+Overall Syntax:
+---------------
+
+<ResourceTYpe>.<Name>.<Attribute>(The type of resource and local name and attribute you want to use)
+
+For Ex:
+------
+aws_eip.ip.public_ip
+
+
+including in the another reference:
+-----------------------------------
+cidr_ipv4 = "${aws_eip.ip.public_ip}"
+
+demos:
+======
+
+1. Try with only aws_eip.ip.public_ip
+
+2. Try with only "${aws_eip.ip.public_ip}"
+
+Troubelshoot 
+
+
+String Interpolation in Terraform:
+----------------------------------
+
+${}:
+---
+The above syntax indicates that Terraform will replace the expression inside the curly braces with its calculate value.
+
+==============================================================================================================================================
+
+Output values:
+--------------
+
+Understanding the Basics:
+------------------------
+
+These values helps us expose the information/attributes to other Terraform configurations to use.
+
+
+
+	Create ec2 instance			Create ec2 	 
+	and give its ip
+User 	-------------------->  Terraform -------------------> Instance
+
+	<-------------------    	<--------------------
+
+	public ip of ec2		Fetch info of ec2	
+
+
+
+Ex1:
+----
+
+Create the ElasticIP and output the value of the eip.
+
+syntax:
+-------
+output "local_name" {
+	value = aws_eip.ip.public_ip
+}
+
+output "local_value" {
+	value = "http://${aws_eip.ip.public_ip}:80"
+}
+
+
+output "local_name" {
+	value = aws_eip.ip
+}
+
+==============================================================================================================================================
+
+Terraform Variables:
+-------------------
+
+Understanding the Challenge:
+---------------------------
+
+Repeated static values in the code can create more work in the feature.
+
+Better Approach:
+---------------
+
+A better solution would be to define repeated static values in one central place.
+
+Basics of variables:
+-------------------
+
+Terraform input variables are used to pass certain values from outside of the configuration.
+
+syntax:
+--------
+
+variable "local_name" {
+	default = "10.0.0.0/16"
+}
+
+
+Using in config file:
+---------------------
+var.local_name
+
+
+Benefits of variables:
+----------------------
+
+1. Updating the variables in central place instead of searching and replacing them throughout your code, saving time and potential mistakes.
+
+
+2. No need to touch the core configuration file. This can avoid human mistakes while editing.
+
+
+as minimum as we can touch main configuration file
+
+Naming Convention = variables.tf
+
+==============================================================================================================================================
+
+
+Variable Definitions File :
+--------------------------
+
+Understanding the Base :
+-------------------------
+
+1. Managing the variables in production environment is one of the very important aspect to keep code and clean and reusable.
+
+2. Hashicorp recommended creating separate file with *.tfvars to define all variables in a project.
+
+
+How Recommended Folder Structure Looks Like:
+-------------------------------------------
+
+1. Main configuration file
+
+2. varibles.tf file that defines all the variables.
+
+3. terraform.tfvars file that define values to all the variables.
+
+4. outputs.tf
+
+
+
+Configuration for Different Environments:
+----------------------------------------
+
+Organization can have wide set of environments like dev, qa and prod.
+
+so we can different values for same variable present in variable.tf using *.tfvars 
+
+
+
+
+You can manually define the file to use during command line. 
+
+COMMAND:
+--------
+terraform plan -var-file = "prod.tfvars"
+
+	or 
+
+terraform plan -var-file = "dev.tfvars"
+
+
+syntax:
+-------
+
+To define a value: var_name = "var_value"
+
+
+Practicals:
+-------------
+
+1. giving default value and define value in terraform.tfvars
+
+2. give default value and don't mention it in terraform.tfvars
+
+3. change name of terraform.tfvars and try 
+========================================================================================================================================
+
+Approaches to Variables assignment:
+-----------------------------------
+
+Understanding the Base:
+-----------------------
+
+Declaring the Base Values:
+---------------------------
+
+
+1. Variable Defaults
+
+2. Setting the variables in command-line 
+
+3. Variable Definition file 
+
+4. Environment Variables
+
+terraform plan -vars="instance_type = t2.micro"
+
+
+Environment Variables:
+----------------------
+
+Terraform searches the environment of its own process for environment variables name TF_VARS_ followed by the name of a declared variable. 
+
+windows:
+--------
+set the environment variables in system properties.
+
+
+
+
